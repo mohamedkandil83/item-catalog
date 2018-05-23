@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, jsonify,render_template
+from flask import Flask, redirect, url_for, jsonify,render_template,request
 from flask import session as user_session
 from flask_oauth import OAuth
 from urllib2 import Request, urlopen, URLError
@@ -22,7 +22,7 @@ oauth = OAuth()
 
 # database connection
 engine = create_engine('sqlite:///final_catalog.db',)
-#Base.metadata.bind = engine
+Base.metadata.bind = engine
 # session creation
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
@@ -66,9 +66,14 @@ def index():
     return render_template('header.html',user_session=user_session,categories=categories)
  
 
-@app.route('/itemCatalog')
-def mainPage():
-	return render_template('header.html')
+@app.route('/showCategory')
+def showCategory():
+    categories = session.query(Category).all()
+    category_id = id=request.args.get('category_id')
+    items = session.query(Item).filter_by(category_id=category_id).all()
+    return render_template('header.html', items=items,
+    user_session=user_session,
+    categories=categories)
 	
 	
 @app.route('/login')
@@ -138,7 +143,9 @@ def get_access_token():
  
  
 def main():
-    app.run()
+    app.debug = True
+    app.secret_key = 'super_secret_key'
+    app.run(host = '0.0.0.0', port = 5000)
  
  
 if __name__ == '__main__':
