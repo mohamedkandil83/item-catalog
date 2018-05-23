@@ -1,4 +1,5 @@
-from flask import Flask, redirect, url_for, session, jsonify
+from flask import Flask, redirect, url_for, jsonify,render_template
+from flask import session as user_session
 from flask_oauth import OAuth
 from urllib2 import Request, urlopen, URLError
 from sqlalchemy import create_engine, asc
@@ -25,6 +26,7 @@ engine = create_engine('sqlite:///final_catalog.db',)
 # session creation
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+#print session
 
 
 google = oauth.remote_app('google',
@@ -41,7 +43,7 @@ google = oauth.remote_app('google',
  
 @app.route('/')
 def index():
-    access_token = session.get('access_token')
+    access_token = user_session.get('access_token')
     if access_token is None:
         return redirect(url_for('login'))
  
@@ -55,16 +57,23 @@ def index():
     except URLError, e:
         if e.code == 401:
             # Unauthorized - bad token
-            session.pop('access_token', None)
+            user_session.pop('access_token', None)
             return redirect(url_for('login'))
         return res.read()
  
-    return res.read()
+    user_session['user'] = json.load(res)
+    categories = session.query(Category).all()
+    return render_template('header.html',user_session=user_session,categories=categories)
  
- 
+
+@app.route('/itemCatalog')
+def mainPage():
+	return render_template('header.html')
+	
+	
 @app.route('/login')
 def login():
-	access_token = session.get('access_token')
+	access_token = user_session.get('access_token')
 	if access_token is not None:
 		return "Welcome!!"
 	callback=url_for('authorized', _external=True)
@@ -119,13 +128,13 @@ def categoriesJSON():
 @google.authorized_handler
 def authorized(resp):
     access_token = resp['access_token']
-    session['access_token'] = access_token, ''
+    user_session['access_token'] = access_token, ''
     return redirect(url_for('index'))
  
  
 @google.tokengetter
 def get_access_token():
-    return session.get('access_token')
+    return user_session.get('access_token')
  
  
 def main():
