@@ -26,7 +26,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 # Create a user
-user1 = User(name="Mohamed Kandil", email="kandil@udacity.com",
+user1 = User(name="Mohamed Kandil", email="mohamedkandil83@gmail.com",
              picture='http://2.bp.blogspot.com/-u54XGk-hUdU/U1zanJgulMI/AAAAAAAAByM/aKk9EDRONLc/s1600/blogbuzz_logo.gif')
 session.add(user1)
 session.commit()
