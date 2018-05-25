@@ -28,6 +28,7 @@ DBSession = scoped_session(sessionmaker(bind=engine))
 session = DBSession()
 #print session
 
+#followed the tutorial in https://pythonspot.com/login-to-flask-app-with-google/
 
 google = oauth.remote_app('google',
                           base_url='https://www.google.com/accounts/',
