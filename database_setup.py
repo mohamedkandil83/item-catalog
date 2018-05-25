@@ -59,6 +59,6 @@ class Item(Base):
         }
 
 
-engine = create_engine('sqlite:///final_catalog.db')
+#engine = create_engine('sqlite:///final_catalog.db')
 
-Base.metadata.create_all(engine)
+#Base.metadata.create_all(engine)

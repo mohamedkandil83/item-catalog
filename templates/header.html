@@ -13,8 +13,8 @@
     <link href="https://v4-alpha.getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="starter-template.css" rel="stylesheet">
-    <link href="album.css" rel="stylesheet">
+    <link href="/static/starter-template.css" rel="stylesheet">
+    <link href="/static/album.css" rel="stylesheet">
   </head>
 
   <body>
@@ -23,12 +23,15 @@
       <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
+      {% if user_session['user'] != -1 %}
       <a class="navbar-brand" style="color:white;">{{ user_session['user']['name'] }}</a>
-
+        {% endif %}
       <div class="collapse navbar-collapse" id="navbarsExampleDefault">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item active">
+          {% if user_session['user'] != -1 %}
             <a class="nav-link" >{{ user_session['user']['email'] }} <span class="sr-only">(current)</span></a>
+            {% endif %}
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Categories</a>
@@ -38,6 +41,7 @@
               {% endfor %}
             </div>
           </li>
+          
         </ul>
         <form class="form-inline my-2 my-lg-0">
            <a class="nav-link" href="#">Log out</a>
@@ -49,10 +53,12 @@
     </br>
     <section class="jumbotron text-center">
       <div class="container">
-        <h1 class="jumbotron-heading"></h1>
+        <h1 class="jumbotron-heading">Welcome to {{c.name}}</h1>
         <p class="lead text-muted"></p>
         <p>
         </p>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" 
+             data-category="{{c.category_id}}">New Item</button>
       </div>
     </section>
     
@@ -61,13 +67,17 @@
        <div class="album text-muted">
       <div class="container">
 
-        <div class="row">
+        <div >
         <ol>
         {% for i in items %}
           <li class="card">
-            <img data-src="{{i.picture}}" alt="Card image cap">
+            <img src="{{i.picture}}"  style="width:150px;height:60px;" alt="Card image cap">
             <h3>{{i.name}}</h3>
             <p class="card-text">{{i.description}}</p>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" 
+            data-name="{{i.name}}" data-description="{{i.description}}" data-picture="{{i.picture}}"
+            data-id="{{i.id}}" data-category="{{i.category_id}}">Edit</button>
+            <a class="btn btn-lg btn-danger" href="{{url_for('deleteItem', item_id = i.id)}}" >delete</a>
           </li>
           {% endfor %}
         </div>
@@ -75,17 +85,75 @@
       </div>
     </div>
 
+   
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Item</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form action="{{url_for('editItem')}}" method = "post">
+          <div class="form-group">
+            <label for="name-name" class=" col-form-label">Name:</label>
+            <input type="text" name="name" class="name form-control" >
+            <input type="hidden" class="id" name="item_id" >
+          </div>
+          <div class="form-group">
+            <label for="description-name" class="col-form-label">Description:</label>
+            <input type="text" name="description" class="description form-control" >
+          </div>
+          <div class="form-group">
+            <label for="picture-name" class=" col-form-label">Picture:</label>
+            <input type="text" name="picture" class="picture form-control" >
+          </div>
+          <select name="category_id" class="category form-control">
+          {% for c in categories %}
+          <option value="{{c.id}}">{{c.name}}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Update</button>
+      </div>
+        </form>
+    </div>
+  </div>
+</div>
     </div><!-- /.container -->
 
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
-    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" ></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" ></script>
     <script src="https://v4-alpha.getbootstrap.com/dist/js/bootstrap.min.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="https://v4-alpha.getbootstrap.com/assets/js/ie10-viewport-bug-workaround.js"></script>
   </body>
+  <script>
+$('#exampleModal').on('show.bs.modal', function (event) {
+  var button = $(event.relatedTarget) // Button that triggered the modal
+  var name = button.data('name')
+    var description = button.data('description')
+    var picture = button.data('picture')
+var id = button.data('id')
+var category = button.data('category')    // Extract info from data-* attributes
+  // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+  // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+  var modal = $(this)
+  modal.find('.modal-title').text('Edit ' + name)
+  modal.find('.modal-body .name').val(name)
+  modal.find('.modal-body .id').val(id)
+  modal.find('.modal-body .description').val(description)
+  modal.find('.modal-body .picture').val(picture)
+  modal.find('.modal-body .category').val(category)
+})
+</script>
 </html>

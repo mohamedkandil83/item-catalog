@@ -3,7 +3,7 @@ from flask import session as user_session
 from flask_oauth import OAuth
 from urllib2 import Request, urlopen, URLError
 from sqlalchemy import create_engine, asc
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 from database_setup import Base, User, Category, Item
 import json
 
@@ -21,10 +21,10 @@ app.secret_key = SECRET_KEY
 oauth = OAuth()
 
 # database connection
-engine = create_engine('sqlite:///final_catalog.db',)
+engine = create_engine('sqlite:///final_catalog.db',connect_args={'check_same_thread': False}, echo=True)
 Base.metadata.bind = engine
 # session creation
-DBSession = sessionmaker(bind=engine)
+DBSession = scoped_session(sessionmaker(bind=engine))
 session = DBSession()
 #print session
 
@@ -62,17 +62,74 @@ def index():
         return res.read()
  
     user_session['user'] = json.load(res)
+    # chek for an existing user
+    user = session.query(User).filter_by(email=user_session['user']['email']).first()
+    if user is None:
+        newUser = User(name=user_session['user']['name'], email=user_session['user']['email'], picture=user_session['user']['picture'])
+        session.add(newUser)
+        session.commit()
     categories = session.query(Category).all()
-    return render_template('header.html',user_session=user_session,categories=categories)
+    c = session.query(Category).filter_by(id=1).one()
+    #return render_template('header.html',user_session=user_session,categories=categories, c=c)
+    return redirect(url_for('showCategory', category_id = c.id))
  
+@app.route('/items/add',methods=[ 'POST'])
+def editItem():
+    #"""Check if user is logged in"""
+    #access_token = user_session.get('access_token')
+    if user_session['user'] == -1:
+        return redirect(url_for('login'))
+    
+    if request.form['item_id']:
+        updatedItem = session.query(Item).filter_by(id=request.form['item_id']).one()
+    else:
+        updatedItem = Item()
+    c = session.query(Category).filter_by(id=request.form['category_id']).one()
+    u = session.query(User).filter_by(email=user_session['user']['email']).one()
+    updatedItem.name=request.form['name']
+    updatedItem.category = c
+    updatedItem.description=request.form['description']
+    updatedItem.picture=request.form['picture']
 
+    if u.email != user_session['user']['email']:
+		return redirect('/login')
+    
+    if request.method != 'POST':
+        session.add(item)
+        session.commit()
+        return redirect(url_for('showCategory', category_id = c.id))
+    else:
+        return redirect(url_for('showCategory', category_id = c.id))
+    
+@app.route('/items/<int:item_id>/delete')
+def deleteItem(item_id):
+    #"""Check if user is logged in"""
+    #access_token = user_session.get('access_token')
+    if user_session['user'] == -1:
+        return redirect(url_for('login'))
+    item = session.query(Item).filter_by(id = item_id).first()
+    
+    user = session.query(User).filter_by(id=1).one()
+
+    if creator.id != user_session['user']['email']:
+		return redirect('/login')
+
+    if request.method != 'POST':
+        session.delete(item)
+        session.commit()
+        return redirect(url_for('showCategory', category_id = item.category_id))
+    else:
+        return redirect(url_for('showCategory', category_id = item.category_id))
 @app.route('/showCategory')
 def showCategory():
     categories = session.query(Category).all()
     category_id = id=request.args.get('category_id')
+    le_category = session.query(Category).filter_by(id=category_id).one()
     items = session.query(Item).filter_by(category_id=category_id).all()
+    if 'user' not in user_session:
+       user_session['user'] = -1 
     return render_template('header.html', items=items,
-    user_session=user_session,
+    user_session=user_session,c=le_category,
     categories=categories)
 	
 	
