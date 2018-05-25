@@ -137,11 +137,14 @@ def showCategory():
 def login():
 	access_token = user_session.get('access_token')
 	if access_token is not None:
-		return "Welcome!!"
+		return redirect(url_for('showCategory', category_id = 1))
 	callback=url_for('authorized', _external=True)
 	return google.authorize(callback=callback)
  
-
+@app.route('/logout')
+def logout():
+	del user_session
+	return return redirect(url_for('showCategory', category_id = 1))
 
 #===================
 # JSON End Point
