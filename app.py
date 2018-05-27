@@ -145,7 +145,7 @@ def login():
 @app.route('/logout')
 def logout():
 	del user_session
-	return return redirect(url_for('showCategory', category_id = 1))
+	return redirect(url_for('showCategory', category_id = 1))
 
 #===================
 # JSON End Point
