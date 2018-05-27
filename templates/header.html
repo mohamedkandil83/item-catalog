@@ -45,9 +45,9 @@
         </ul>
         <form class="form-inline my-2 my-lg-0">
         {% if user_session['user'] != -1 %}
-           <a class="nav-link" href="{{url_for(login)}}">Log in</a>
+           <a class="nav-link" href="{{url_for('login')}}">Log in</a>
            {% else %}
-           <a class="nav-link" href="{{url_for(logout)}}">Log in</a>
+           <a class="nav-link" href="{{url_for('logout')}}">Log in</a>
            {% endif %}
         </form>
       </div>
