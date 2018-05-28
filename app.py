@@ -44,31 +44,7 @@ google = oauth.remote_app('google',
  
 @app.route('/')
 def index():
-    access_token = user_session.get('access_token')
-    if access_token is None:
-        return redirect(url_for('login'))
- 
-    access_token = access_token[0]
- 
-    headers = {'Authorization': 'OAuth '+access_token}
-    req = Request('https://www.googleapis.com/oauth2/v1/userinfo',
-                  None, headers)
-    try:
-        res = urlopen(req)
-    except URLError, e:
-        if e.code == 401:
-            # Unauthorized - bad token
-            user_session.pop('access_token', None)
-            return redirect(url_for('login'))
-        return res.read()
- 
-    user_session['user'] = json.load(res)
-    # chek for an existing user
-    user = session.query(User).filter_by(email=user_session['user']['email']).first()
-    if user is None:
-        newUser = User(name=user_session['user']['name'], email=user_session['user']['email'], picture=user_session['user']['picture'])
-        session.add(newUser)
-        session.commit()
+    findAndCreateUser()
     categories = session.query(Category).all()
     c = session.query(Category).filter_by(id=1).one()
     #return render_template('header.html',user_session=user_session,categories=categories, c=c)
@@ -102,7 +78,7 @@ def editItem():
     else:
         return redirect(url_for('showCategory', category_id = c.id))
     
-@app.route('/items/<int:item_id>/delete')
+@app.route('/items/<int:item_id>/delete',methods=[ 'GET'])
 def deleteItem(item_id):
     #"""Check if user is logged in"""
     #access_token = user_session.get('access_token')
@@ -110,19 +86,18 @@ def deleteItem(item_id):
         return redirect(url_for('login'))
     item = session.query(Item).filter_by(id = item_id).first()
     
-    user = session.query(User).filter_by(id=1).one()
+    user = session.query(User).filter_by(email=user_session['user']['email']).first()
 
-    if creator.id != user_session['user']['email']:
+    if user.email != user_session['user']['email']:
 		return redirect('/login')
 
-    if request.method != 'POST':
-        session.delete(item)
-        session.commit()
-        return redirect(url_for('showCategory', category_id = item.category_id))
-    else:
-        return redirect(url_for('showCategory', category_id = item.category_id))
+    session.delete(item)
+    session.commit()
+    return redirect(url_for('showCategory', category_id = item.category_id))
+    
 @app.route('/showCategory')
 def showCategory():
+    findAndCreateUser()
     categories = session.query(Category).all()
     category_id = id=request.args.get('category_id')
     le_category = session.query(Category).filter_by(id=category_id).one()
@@ -144,7 +119,7 @@ def login():
  
 @app.route('/logout')
 def logout():
-	del user_session
+	user_session.clear()
 	return redirect(url_for('showCategory', category_id = 1))
 
 #===================
@@ -208,6 +183,29 @@ def main():
     app.secret_key = 'super_secret_key'
     app.run(host = '0.0.0.0', port = 5000)
  
- 
+ #helper
+def findAndCreateUser():
+    if 'access_token' in user_session:
+        access_token = user_session.get('access_token')[0]
+        headers = {'Authorization': 'OAuth '+access_token}
+        req = Request('https://www.googleapis.com/oauth2/v1/userinfo',
+                  None, headers)
+        try:
+            res = urlopen(req)
+        except URLError, e:
+            if e.code == 401:
+                # Unauthorized - bad token
+                user_session.pop('access_token', None)
+                return redirect(url_for('login'))
+            return res.read()
+     
+        user_session['user'] = json.load(res)
+        # chek for an existing user
+        user = session.query(User).filter_by(email=user_session['user']['email']).first()
+        if user is None:
+            newUser = User(name=user_session['user']['name'], email=user_session['user']['email'], picture=user_session['user']['picture'])
+            session.add(newUser)
+            session.commit()
+
 if __name__ == '__main__':
     main()

@@ -15,21 +15,29 @@ class User(Base):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key = True)
-    name = Column(String(255), nullable = False)
-    email = Column(String(255), nullable = False)
-    picture = Column(String(255))
+    name = Column(String(256), nullable = False)
+    email = Column(String(256), nullable = False)
+    picture = Column(String(512))
+    
+    @property
+    def serialize(self):
+        """Serializable User Instances"""
+        return {
+            'name'          : self.name,
+            'id'            : self.id
+        }
 
 class Category(Base):
     __tablename__ = 'category'
 
     id = Column(Integer, primary_key = True)
-    name = Column(String(255), nullable = False)
+    name = Column(String(256), nullable = False)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User, backref="category")
 
     @property
     def serialize(self):
-        """Return object data in easily serializeable format"""
+        """Serializable Category Instances"""
         return {
             'name'          : self.name,
             'id'            : self.id
@@ -39,9 +47,9 @@ class Item(Base):
     __tablename__ = 'item'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
-    description = Column(String(255))
-    picture = Column(String(255))
+    name = Column(String(256), nullable=False)
+    description = Column(String(256))
+    picture = Column(String(512))
     category_id = Column(Integer, ForeignKey('category.id'))
     category = relationship(Category, backref=backref('item', cascade='all, delete'))
     user_id = Column(Integer, ForeignKey('user.id'))
