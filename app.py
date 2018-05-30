@@ -86,8 +86,8 @@ def editItem():
     updatedItem.picture = request.form['picture']
 
     # authorization
-    if user.id != item.user_id:
-        return redirect(url_for('login'))
+    if u.id != updatedItem.user_id:
+        return redirect(url_for('showCategory', category_id=1))
 
     if request.method != 'POST':
         session.add(item)
@@ -111,7 +111,7 @@ def deleteItem(item_id):
 
     # authorization
     if user.id != item.user_id:
-        return redirect(url_for('login'))
+        return redirect(url_for('showCategory', category_id=c.id))
 
     session.delete(item)
     session.commit()
