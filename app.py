@@ -74,23 +74,22 @@ def editItem():
 
     if request.form['item_id']:
         updatedItem = session.query(Item).filter_by(
-            id=request.form['item_id']).one()
+            id=request.form['item_id']).first()
     else:
         updatedItem = Item()
-    c = session.query(Category).filter_by(id=request.form['category_id']).one()
+    c = session.query(Category).filter_by(id=request.form['category_id']).first()
     u = session.query(User).filter_by(
-        email=user_session['user']['email']).one()
+        email=user_session['user']['email']).first()
     updatedItem.name = request.form['name']
     updatedItem.category = c
     updatedItem.description = request.form['description']
     updatedItem.picture = request.form['picture']
 
     # authorization
-    if u.id != updatedItem.user_id:
+    if u is None or u.id != updatedItem.user_id:
         return redirect(url_for('showCategory', category_id=1))
-
-    if request.method != 'POST':
-        session.add(item)
+    elif request.method == 'POST':
+        session.add(updatedItem)
         session.commit()
         return redirect(url_for('showCategory', category_id=c.id))
     else:
@@ -110,8 +109,8 @@ def deleteItem(item_id):
         email=user_session['user']['email']).first()
 
     # authorization
-    if user.id != item.user_id:
-        return redirect(url_for('showCategory', category_id=c.id))
+    if user is None or user.id != item.user_id:
+        return redirect(url_for('showCategory', category_id=1))
 
     session.delete(item)
     session.commit()
