@@ -77,17 +77,19 @@ def editItem():
             id=request.form['item_id']).first()
     else:
         updatedItem = Item()
-    c = session.query(Category).filter_by(id=request.form['category_id']).first()
     u = session.query(User).filter_by(
         email=user_session['user']['email']).first()
+    # authorization
+    if u is None or u.id != updatedItem.user_id:
+        return redirect(url_for('showCategory', category_id=1))
+
+    c = session.query(Category).filter_by(id=request.form['category_id']).first()
     updatedItem.name = request.form['name']
     updatedItem.category = c
     updatedItem.description = request.form['description']
     updatedItem.picture = request.form['picture']
-
-    # authorization
-    if u is None or u.id != updatedItem.user_id:
-        return redirect(url_for('showCategory', category_id=1))
+    updatedItem.user_id = u.id
+    
     elif request.method == 'POST':
         session.add(updatedItem)
         session.commit()
