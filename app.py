@@ -80,7 +80,7 @@ def editItem():
     u = session.query(User).filter_by(
         email=user_session['user']['email']).first()
     # authorization
-    if u is None or u.id != updatedItem.user_id:
+    if u is None or (updatedItem.id is not None and u.id != updatedItem.user_id):
         return redirect(url_for('showCategory', category_id=1))
 
     c = session.query(Category).filter_by(id=request.form['category_id']).first()
@@ -90,7 +90,7 @@ def editItem():
     updatedItem.picture = request.form['picture']
     updatedItem.user_id = u.id
     
-    elif request.method == 'POST':
+    if request.method == 'POST':
         session.add(updatedItem)
         session.commit()
         return redirect(url_for('showCategory', category_id=c.id))
